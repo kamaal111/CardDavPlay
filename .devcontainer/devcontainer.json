@@ -1,0 +1,30 @@
+{
+	"name": "CardDav Play",
+	"dockerComposeFile": [
+		"docker-compose.code.yml"
+	],
+	"service": "code",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"postCreateCommand": "env REPLACE_ZSH_CONF=true just setup-dev-container && exit 0",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "zsh"
+			},
+			"extensions": [
+				"eamodio.gitlens",
+				"skellock.just",
+				"ms-azuretools.vscode-docker",
+				"streetsidesoftware.code-spell-checker",
+				"esbenp.prettier-vscode",
+				"redhat.vscode-yaml"
+			]
+		}
+	},
+	"features": {
+		"ghcr.io/guiyomh/features/just:0": {},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"forwardPorts": []
+}
