@@ -11,13 +11,6 @@ plugins=(
 source $ZSH/oh-my-zsh.sh
 
 export PATH=$HOME/.local/bin:$PATH
-
-# pnpm
-export PNPM_HOME="/Users/kamaal/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
+export LC_ALL=C
 
 alias pn=pnpm
-# pnpm end
