@@ -6,16 +6,18 @@ then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 fi
 
-if [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions ]
+ZSH_AUTOSUGGESTIONS_PATH="~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+if [ ! -d $ZSH_AUTOSUGGESTIONS_PATH ]
 then
     echo "Installing zsh-autosuggestions"
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH_AUTOSUGGESTIONS_PATH
 fi
 
-if [ ! -d ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting ]
+SYNTAX_HIGHLIGHTING_PATH="~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+if [ ! -d $SYNTAX_HIGHLIGHTING_PATH ]
 then
     echo "Installing zsh-syntax-highlighting"
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $SYNTAX_HIGHLIGHTING_PATH
 fi
 
 echo "Updating zsh configuration"
