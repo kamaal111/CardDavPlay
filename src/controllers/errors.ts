@@ -5,6 +5,7 @@ import type {AppRequest} from '../types';
 const NOT_FOUND_CODE = 404;
 const INTERNAL_SERVER_ERROR_MESSAGE = 'Okey we messed up, please help!';
 const STATUS_CODE_TO_MESSAGE: {[code: number]: string} = {
+  400: 'Bad Request',
   [NOT_FOUND_CODE]: 'Not Found',
   500: INTERNAL_SERVER_ERROR_MESSAGE,
 };

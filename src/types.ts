@@ -11,3 +11,5 @@ export type AppRequest<
   RequestBody = Record<string, unknown>,
   RequestQuery = qs.ParsedQs
 > = Request<Params, ResponseBody, RequestBody, RequestQuery>;
+
+export type Result<T, E = Error> = {ok: true; value: T} | {ok: false; error: E};
