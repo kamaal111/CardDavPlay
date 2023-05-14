@@ -21,3 +21,5 @@ fi
 echo "Updating zsh configuration"
 cp -f .devcontainer/.zshrc ~/.zshrc
 . ~/.zshrc
+cp -f .devcontainer/.zshenv ~/.zshenv
+. ~/.zshenv

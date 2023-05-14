@@ -9,6 +9,3 @@ plugins=(
 )
 
 source $ZSH/oh-my-zsh.sh
-
-export PATH=$HOME/.local/bin:$PATH
-export LC_ALL=C
