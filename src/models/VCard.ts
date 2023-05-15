@@ -1,4 +1,4 @@
-import compactMap from '../utils/compactMap';
+import compactMap from '../utils/array/compactMap';
 
 import type {Result} from '../types';
 
@@ -8,6 +8,7 @@ interface VCardParams {
   phones: {types: string[]; number: string}[];
   nickname?: string;
   birthday?: Date;
+  productID?: string;
 }
 
 class VCard {
@@ -16,6 +17,7 @@ class VCard {
   phones: {types: string[]; number: string}[];
   nickname?: string;
   birthday?: Date;
+  productID?: string;
 
   constructor(params: VCardParams) {
     this.firstName = params.firstName.trim();
@@ -26,9 +28,12 @@ class VCard {
   }
 
   makeContent(): Result<string, VCardMakeError> {
-    const vCardValues = [this.infoField, `FN:${this.fullName}`].concat(
-      this.telFields
-    );
+    const vCardValues = [
+      `PRODID:${this.productID ?? '-//Kamaal.io'}`.substring(
+        0,
+        VCard.MAXIMUM_CHARACTERS
+      ),
+    ].concat([this.infoField, `FN:${this.fullName}`, ...this.telFields]);
 
     if (this.nickname) {
       vCardValues.push(
@@ -67,7 +72,7 @@ class VCard {
     return `BDAY:${year}-${month}-${day}`;
   }
 
-  private get telFields() {
+  private get telFields(): string[] {
     return compactMap(this.phones, phone => {
       const number = phone.number.trim();
       if (number.length === 0) {
@@ -103,7 +108,7 @@ class VCard {
     );
   }
 
-  private wrapVCardValues(values: string[]) {
+  private wrapVCardValues(values: string[]): string[] {
     return ['BEGIN:VCARD', `VERSION:${VCard.VERSION}`].concat([
       ...values,
       'END:VCARD',

@@ -1,6 +1,7 @@
 import type {Response} from 'express';
 
 import VCard from '../models/VCard';
+import isOptionalValueType from '../utils/isOptionalValueType';
 
 import type {AppRequest, Result} from '../types';
 
@@ -10,6 +11,7 @@ type CreateVCardPayload = {
   phones: {types: string[]; number: string}[];
   nickname?: string;
   birthday?: string;
+  product_id?: string;
 };
 
 class ContactsController {
@@ -50,7 +52,7 @@ class ContactsController {
   private processVCardPayload = (
     body: CreateVCardPayload
   ): Result<ConstructorParameters<typeof VCard>[0], VCardValidationError> => {
-    const {birthday, first_name, last_name, ...restOfBody} = body;
+    const {birthday, first_name, last_name, product_id, ...restOfBody} = body;
 
     let formattedBirth: Date | undefined = undefined;
     if (birthday) {
@@ -68,6 +70,7 @@ class ContactsController {
         birthday: formattedBirth,
         firstName: first_name,
         lastName: last_name,
+        productID: product_id,
       },
     };
   };
@@ -79,21 +82,25 @@ class ContactsController {
       return {ok: false, error: new VCardValidationError('Wrong structure')};
     }
 
-    const {first_name, last_name, phones, nickname, birthday} = body;
+    const {first_name, last_name, phones, nickname, birthday, product_id} =
+      body;
     if (!this.firstNameIsValid(first_name)) {
       return {ok: false, error: new VCardValidationError('Wrong first_name')};
     }
     if (!this.phonesIsValid(phones)) {
       return {ok: false, error: new VCardValidationError('Wrong phones')};
     }
-    if (!this.lastNameIsValid(last_name)) {
+    if (!isOptionalValueType(last_name, 'string')) {
       return {ok: false, error: new VCardValidationError('Wrong last_name')};
     }
-    if (!this.nicknameIsValid(nickname)) {
+    if (!isOptionalValueType(nickname, 'string')) {
       return {ok: false, error: new VCardValidationError('Wrong nickname')};
     }
-    if (!this.birthdayIsValid(birthday)) {
+    if (!isOptionalValueType(birthday, 'string')) {
       return {ok: false, error: new VCardValidationError('Wrong birthday')};
+    }
+    if (!isOptionalValueType(product_id, 'string')) {
+      return {ok: false, error: new VCardValidationError('Wrong product_id')};
     }
 
     return {ok: true, value: undefined};
@@ -111,20 +118,8 @@ class ContactsController {
     );
   }
 
-  private birthdayIsValid(birthday?: string) {
-    return typeof birthday === 'string' || birthday == null;
-  }
-
-  private lastNameIsValid(lastName?: string) {
-    return typeof lastName === 'string' || lastName == null;
-  }
-
   private firstNameIsValid(firstName: string) {
     return typeof firstName === 'string';
-  }
-
-  private nicknameIsValid(nickname?: string) {
-    return typeof nickname === 'string' || nickname == null;
   }
 }
 
