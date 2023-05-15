@@ -5,6 +5,7 @@ services:
       dockerfile: .devcontainer/Dockerfile
       args:
         NODE_VERSION: 20
+        PYTHON_VERSION: 3.11
     container_name: carddav-play
     volumes:
       - ../..:/workspaces:cached

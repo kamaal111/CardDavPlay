@@ -5,36 +5,40 @@ import type {Result} from '../types';
 interface VCardParams {
   firstName: string;
   lastName?: string;
-  phones: {type: string; number: string}[];
+  phones: {types: string[]; number: string}[];
   nickname?: string;
+  birthday?: Date;
 }
 
 class VCard {
   firstName: string;
   lastName?: string;
-  phones: {type: string; number: string}[];
+  phones: {types: string[]; number: string}[];
   nickname?: string;
+  birthday?: Date;
 
   constructor(params: VCardParams) {
     this.firstName = params.firstName.trim();
     this.lastName = params.lastName?.trim();
     this.phones = params.phones;
     this.nickname = params.nickname?.trim();
+    this.birthday = params.birthday;
   }
 
-  make(): Result<string, VCardMakeError> {
-    const telFields = this.telFields;
-    if (telFields.length === 0) {
-      return {ok: false, error: new VCardMakeError('Invalid phones')};
-    }
-
+  makeContent(): Result<string, VCardMakeError> {
     const vCardValues = [this.infoField, `FN:${this.fullName}`].concat(
-      telFields
+      this.telFields
     );
+
     if (this.nickname) {
       vCardValues.push(
         `NICKNAME:${this.nickname}`.substring(0, VCard.MAXIMUM_CHARACTERS)
       );
+    }
+
+    const birthdayField = this.birthdayField;
+    if (birthdayField) {
+      vCardValues.push(birthdayField);
     }
 
     return {
@@ -52,6 +56,17 @@ class VCard {
     return name.substring(0, VCard.MAXIMUM_CHARACTERS);
   }
 
+  private get birthdayField() {
+    if (!this.birthday) {
+      return null;
+    }
+
+    const year = this.birthday.getUTCFullYear();
+    const month = (this.birthday.getMonth() + 1).toString().padStart(2, '0');
+    const day = this.birthday.getDate().toString().padStart(2, '0');
+    return `BDAY:${year}-${month}-${day}`;
+  }
+
   private get telFields() {
     return compactMap(this.phones, phone => {
       const number = phone.number.trim();
@@ -59,12 +74,11 @@ class VCard {
         return null;
       }
 
-      const type = phone.type.trim();
-      if (type.length === 0) {
-        return null;
-      }
+      const typeFields = phone.types
+        .map(type => `type=${type.trim()}`)
+        .join(';');
 
-      const telField = `TEL;type=CELL;type=${type};type=pref:${number}`;
+      const telField = `TEL;${typeFields}:${number}`;
       if (telField.length + 2 >= VCard.MAXIMUM_CHARACTERS) {
         return null;
       }

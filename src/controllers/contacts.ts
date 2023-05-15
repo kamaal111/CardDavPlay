@@ -7,8 +7,9 @@ import type {AppRequest, Result} from '../types';
 type CreateVCardPayload = {
   first_name: string;
   last_name?: string;
-  phones: {type: string; number: string}[];
+  phones: {types: string[]; number: string}[];
   nickname?: string;
+  birthday?: string;
 };
 
 class ContactsController {
@@ -18,7 +19,7 @@ class ContactsController {
     request: AppRequest<undefined, undefined, CreateVCardPayload>,
     response: Response
   ) => {
-    const validateResult = this.validateVCardPayload(request);
+    const validateResult = this.validateVCardPayload(request.body);
     if (!validateResult.ok) {
       response.status(400).json({
         details: validateResult.error.message,
@@ -26,14 +27,16 @@ class ContactsController {
       return;
     }
 
-    const {first_name, last_name, phones, nickname} = validateResult.value;
-    const vCard = new VCard({
-      firstName: first_name,
-      lastName: last_name,
-      phones,
-      nickname,
-    });
-    const vCardMakeResult = vCard.make();
+    const processResult = this.processVCardPayload(request.body);
+    if (!processResult.ok) {
+      response.status(400).json({
+        details: processResult.error.message,
+      });
+      return;
+    }
+
+    const vCard = new VCard(processResult.value);
+    const vCardMakeResult = vCard.makeContent();
     if (!vCardMakeResult.ok) {
       response.status(400).json({
         details: vCardMakeResult.error.message,
@@ -44,14 +47,39 @@ class ContactsController {
     response.status(201).json(vCardMakeResult.value);
   };
 
+  private processVCardPayload = (
+    body: CreateVCardPayload
+  ): Result<ConstructorParameters<typeof VCard>[0], VCardValidationError> => {
+    const {birthday, first_name, last_name, ...restOfBody} = body;
+
+    let formattedBirth: Date | undefined = undefined;
+    if (birthday) {
+      try {
+        formattedBirth = new Date(birthday);
+      } catch (error) {
+        return {ok: false, error: new VCardValidationError('Wrong birthday')};
+      }
+    }
+
+    return {
+      ok: true,
+      value: {
+        ...restOfBody,
+        birthday: formattedBirth,
+        firstName: first_name,
+        lastName: last_name,
+      },
+    };
+  };
+
   private validateVCardPayload = (
-    request: AppRequest<undefined, undefined, CreateVCardPayload>
-  ): Result<CreateVCardPayload, VCardValidationError> => {
-    if (typeof request.body !== 'object' || Array.isArray(request.body)) {
+    body: CreateVCardPayload
+  ): Result<undefined, VCardValidationError> => {
+    if (typeof body !== 'object' || Array.isArray(body)) {
       return {ok: false, error: new VCardValidationError('Wrong structure')};
     }
 
-    const {first_name, last_name, phones, nickname} = request.body;
+    const {first_name, last_name, phones, nickname, birthday} = body;
     if (!this.firstNameIsValid(first_name)) {
       return {ok: false, error: new VCardValidationError('Wrong first_name')};
     }
@@ -64,12 +92,27 @@ class ContactsController {
     if (!this.nicknameIsValid(nickname)) {
       return {ok: false, error: new VCardValidationError('Wrong nickname')};
     }
+    if (!this.birthdayIsValid(birthday)) {
+      return {ok: false, error: new VCardValidationError('Wrong birthday')};
+    }
 
-    return {ok: true, value: request.body};
+    return {ok: true, value: undefined};
   };
 
-  private phonesIsValid(phones: {type: string; number: string}[]) {
-    return Array.isArray(phones) && phones.length > 0;
+  private phonesIsValid(phones: {types: string[]; number: string}[]) {
+    return (
+      Array.isArray(phones) &&
+      phones.every(
+        phone =>
+          typeof phone.number === 'string' &&
+          Array.isArray(phone.types) &&
+          phone.types.every(type => typeof type === 'string')
+      )
+    );
+  }
+
+  private birthdayIsValid(birthday?: string) {
+    return typeof birthday === 'string' || birthday == null;
   }
 
   private lastNameIsValid(lastName?: string) {

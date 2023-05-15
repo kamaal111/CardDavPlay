@@ -19,7 +19,8 @@
 				"redhat.vscode-yaml",
 				"bungcip.better-toml",
 				"esbenp.prettier-vscode",
-				"dbaeumer.vscode-eslint"
+				"dbaeumer.vscode-eslint",
+				"yoavbls.pretty-ts-errors"
 			]
 		}
 	},

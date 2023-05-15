@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+ARG PYTHON_VERSION
+FROM python:$PYTHON_VERSION-slim
 
 RUN apt update && apt upgrade -y && apt install -y zsh git vim curl httpie
 
