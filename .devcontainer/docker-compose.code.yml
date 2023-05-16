@@ -5,8 +5,15 @@ services:
       dockerfile: .devcontainer/Dockerfile
       args:
         NODE_VERSION: 20
-        PYTHON_VERSION: 3.11
+        MONGODB_CLI_VERSION: "6.0"
     container_name: carddav-play
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity
+
+  mongo:
+    image: mongo:4.2
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
