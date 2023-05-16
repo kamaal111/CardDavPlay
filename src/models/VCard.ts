@@ -33,7 +33,10 @@ class VCard {
         0,
         VCard.MAXIMUM_CHARACTERS
       ),
-    ].concat([this.infoField, `FN:${this.fullName}`, ...this.telFields]);
+      this.infoField,
+      this.fullNameField,
+      ...this.telFields,
+    ];
 
     if (this.nickname) {
       vCardValues.push(
@@ -52,13 +55,13 @@ class VCard {
     };
   }
 
-  get fullName() {
+  private get fullNameField() {
     let name = this.firstName;
     if (this.lastName) {
       name += ` ${this.lastName}`;
     }
 
-    return name.substring(0, VCard.MAXIMUM_CHARACTERS);
+    return `FN:${name}`.substring(0, VCard.MAXIMUM_CHARACTERS);
   }
 
   private get birthdayField() {
@@ -102,7 +105,7 @@ class VCard {
       .split(' ')
       .join(',')}`;
 
-    return `N:${info.split(' ').join(';')}`.substring(
+    return `N:${info.split(' ').join(';')};;;`.substring(
       0,
       VCard.MAXIMUM_CHARACTERS
     );
