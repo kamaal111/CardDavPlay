@@ -12,6 +12,13 @@ type CreateVCardPayload = {
   nickname?: string;
   birthday?: string;
   product_id?: string;
+  addresses?: {
+    types: string[];
+    street?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+  }[];
 };
 
 class ContactsController {
@@ -82,31 +89,37 @@ class ContactsController {
       return {ok: false, error: new VCardValidationError('Wrong structure')};
     }
 
-    const {first_name, last_name, phones, nickname, birthday, product_id} =
-      body;
-    if (!this.firstNameIsValid(first_name)) {
-      return {ok: false, error: new VCardValidationError('Wrong first_name')};
+    const fieldsThatAreOptionalStrings: (keyof typeof body)[] = [
+      'last_name',
+      'nickname',
+      'birthday',
+      'product_id',
+      'product_id',
+    ];
+    for (const field of fieldsThatAreOptionalStrings) {
+      if (!isOptionalValueType(body[field], 'string')) {
+        return {ok: false, error: new VCardValidationError(`Wrong ${field}`)};
+      }
     }
-    if (!this.phonesIsValid(phones)) {
+
+    const fieldsThatAreStrings: (keyof typeof body)[] = ['first_name'];
+    for (const field of fieldsThatAreStrings) {
+      if (typeof body[field] !== 'string') {
+        return {ok: false, error: new VCardValidationError(`Wrong ${field}`)};
+      }
+    }
+
+    if (!this.phonesIsValid(body.phones)) {
       return {ok: false, error: new VCardValidationError('Wrong phones')};
     }
-    if (!isOptionalValueType(last_name, 'string')) {
-      return {ok: false, error: new VCardValidationError('Wrong last_name')};
-    }
-    if (!isOptionalValueType(nickname, 'string')) {
-      return {ok: false, error: new VCardValidationError('Wrong nickname')};
-    }
-    if (!isOptionalValueType(birthday, 'string')) {
-      return {ok: false, error: new VCardValidationError('Wrong birthday')};
-    }
-    if (!isOptionalValueType(product_id, 'string')) {
-      return {ok: false, error: new VCardValidationError('Wrong product_id')};
+    if (!this.addressesIsValid(body.addresses)) {
+      return {ok: false, error: new VCardValidationError('Wrong addresses')};
     }
 
     return {ok: true, value: undefined};
   };
 
-  private phonesIsValid(phones: {types: string[]; number: string}[]) {
+  private phonesIsValid(phones: CreateVCardPayload['phones']) {
     return (
       Array.isArray(phones) &&
       phones.every(
@@ -118,8 +131,31 @@ class ContactsController {
     );
   }
 
-  private firstNameIsValid(firstName: string) {
-    return typeof firstName === 'string';
+  private addressesIsValid(addresses: CreateVCardPayload['addresses']) {
+    for (const address of addresses ?? []) {
+      const typesIsValid =
+        typeof address === 'object' &&
+        !Array.isArray(address) &&
+        Array.isArray(address.types) &&
+        address.types.every(type => typeof type === 'string');
+      if (!typesIsValid) {
+        return false;
+      }
+
+      const fieldsThatAreOptionalStrings: (keyof typeof address)[] = [
+        'street',
+        'postalCode',
+        'city',
+        'country',
+      ];
+      for (const field of fieldsThatAreOptionalStrings) {
+        if (!isOptionalValueType(address[field], 'string')) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 }
 

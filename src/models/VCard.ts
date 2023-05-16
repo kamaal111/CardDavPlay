@@ -2,29 +2,44 @@ import compactMap from '../utils/array/compactMap';
 
 import type {Result} from '../types';
 
-interface VCardParams {
+interface VCardable {
   firstName: string;
   lastName?: string;
   phones: {types: string[]; number: string}[];
   nickname?: string;
   birthday?: Date;
   productID?: string;
+  addresses?: {
+    types: string[];
+    street?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+  }[];
 }
 
-class VCard {
+class VCard implements VCardable {
   firstName: string;
   lastName?: string;
   phones: {types: string[]; number: string}[];
   nickname?: string;
   birthday?: Date;
   productID?: string;
+  addresses?: {
+    types: string[];
+    street?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+  }[];
 
-  constructor(params: VCardParams) {
+  constructor(params: VCardable) {
     this.firstName = params.firstName.trim();
     this.lastName = params.lastName?.trim();
     this.phones = params.phones;
     this.nickname = params.nickname?.trim();
     this.birthday = params.birthday;
+    this.addresses = params.addresses;
   }
 
   makeContent(): Result<string, VCardMakeError> {
@@ -36,6 +51,7 @@ class VCard {
       this.infoField,
       this.fullNameField,
       ...this.telFields,
+      ...this.addressFields,
     ];
 
     if (this.nickname) {
@@ -53,6 +69,32 @@ class VCard {
       ok: true,
       value: this.wrapVCardValues(vCardValues).join('\n'),
     };
+  }
+
+  private get addressFields(): string[] {
+    return compactMap(this.addresses ?? [], address => {
+      const addressFields: (keyof typeof address)[] = [
+        'street',
+        'postalCode',
+        'city',
+        'country',
+      ];
+      if (addressFields.every(field => !address[field])) {
+        return null;
+      }
+
+      const types = address.types.map(type => `type=${type}`).join(';');
+      const combinedAddress = addressFields
+        .map(field => (address[field] as string).trim())
+        .join(';');
+
+      const addressField = `ADR;${types}:;;${combinedAddress}`;
+      if (addressField.length + 2 >= VCard.MAXIMUM_CHARACTERS) {
+        return null;
+      }
+
+      return addressField;
+    });
   }
 
   private get fullNameField() {
@@ -118,7 +160,7 @@ class VCard {
     ]);
   }
 
-  // Should fit in to 8bits
+  // Fields should fit in to 8bits
   private static MAXIMUM_CHARACTERS = 2 ** 8;
   private static VERSION = '3.0';
 }
