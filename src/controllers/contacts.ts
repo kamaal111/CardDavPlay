@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import * as fsPromises from 'fs/promises';
 import type {NextFunction, Response} from 'express';
 
 import VCardModel from '../models/VCard';
@@ -73,14 +71,8 @@ class ContactsController {
       return;
     }
 
-    const filepath = `data/contacts/${id}.vcf`;
-    if (!fs.existsSync(filepath)) {
-      await fsPromises.writeFile(filepath, vCard.content!);
-    }
-
-    const file = await fsPromises.readFile(filepath);
-
-    response.writeHead(200, {'Content-Type': 'text/x-vcard'}).end(file);
+    const content = Buffer.from(vCard.content!, 'utf-8');
+    response.writeHead(200, {'Content-Type': 'text/x-vcard'}).end(content);
   };
 
   private processVCardPayload = (
