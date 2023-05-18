@@ -1,8 +1,9 @@
-import type {Response} from 'express';
+import type {NextFunction, Response} from 'express';
 
 import VCardModel from '../models/VCard';
 import VCardDatabaseModel from '../models/database/VCard';
 import isOptionalValueType from '../utils/isOptionalValueType';
+import sendError from '../utils/requests/sendError';
 
 import type {AppRequest, Result} from '../types';
 
@@ -52,7 +53,25 @@ class ContactsController {
     });
     await vCardDatabaseModel.save();
 
-    response.status(201).json(vCardDatabaseModel.content);
+    response
+      .status(201)
+      .json({details: 'Success', contact_id: vCardDatabaseModel.uid});
+  };
+
+  findVCard = async (
+    request: AppRequest<{id: string}>,
+    response: Response,
+    next: NextFunction
+  ) => {
+    const {id} = request.params;
+
+    const vCard = await VCardDatabaseModel.findOne({uid: id});
+    if (vCard == null) {
+      sendError(response, next)(404);
+      return;
+    }
+
+    response.status(200).json({details: 'Success', content: vCard.content});
   };
 
   private processVCardPayload = (
