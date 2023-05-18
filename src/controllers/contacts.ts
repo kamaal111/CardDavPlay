@@ -1,9 +1,8 @@
-import type {NextFunction, Response} from 'express';
+import type {Response} from 'express';
 
 import VCardModel from '../models/VCard';
 import VCardDatabaseModel from '../models/database/VCard';
 import isOptionalValueType from '../utils/isOptionalValueType';
-import sendError from '../utils/requests/sendError';
 
 import type {AppRequest, Result} from '../types';
 
@@ -25,6 +24,34 @@ type CreateVCardPayload = {
 
 class ContactsController {
   constructor() {}
+
+  findVCard = async (request: AppRequest<{id: string}>, response: Response) => {
+    const vCardResult = await this.findVCardByID(request.params.id);
+    if (!vCardResult.ok) {
+      response.status(404).json({
+        details: vCardResult.error.message,
+      });
+      return;
+    }
+
+    const content = Buffer.from(vCardResult.value.content, 'utf-8');
+    response.writeHead(200, {'Content-Type': 'text/x-vcard'}).end(content);
+  };
+
+  updateVCard = async (
+    request: AppRequest<{id: string}, undefined, CreateVCardPayload>,
+    response: Response
+  ) => {
+    const vCardResult = await this.findVCardByID(request.params.id);
+    if (!vCardResult.ok) {
+      response.status(404).json({
+        details: vCardResult.error.message,
+      });
+      return;
+    }
+
+    response.status(204).send();
+  };
 
   createVCard = async (
     request: AppRequest<undefined, undefined, CreateVCardPayload>,
@@ -58,21 +85,15 @@ class ContactsController {
       .json({details: 'Success', contact_id: vCardDatabaseModel.uid});
   };
 
-  findVCard = async (
-    request: AppRequest<{id: string}>,
-    response: Response,
-    next: NextFunction
-  ) => {
-    const {id} = request.params;
-
+  private findVCardByID = async (
+    id: string
+  ): Promise<Result<{uid: string; content: string}, VCardFindError>> => {
     const vCard = await VCardDatabaseModel.findOne({uid: id});
     if (vCard == null) {
-      sendError(response, next)(404);
-      return;
+      return {ok: false, error: new VCardFindError(id)};
     }
 
-    const content = Buffer.from(vCard.content!, 'utf-8');
-    response.writeHead(200, {'Content-Type': 'text/x-vcard'}).end(content);
+    return {ok: true, value: vCard as {uid: string; content: string}};
   };
 
   private processVCardPayload = (
@@ -178,6 +199,12 @@ class ContactsController {
     }
 
     return true;
+  }
+}
+
+class VCardFindError extends Error {
+  constructor(id: string) {
+    super(`Could not find VCard of id=${id}`);
   }
 }
 

@@ -19,6 +19,7 @@ class ContactsRouter implements AppRouter {
   private initializeRoutes() {
     this.router.post('/', this.controller.createVCard);
     this.router.get('/:id', this.controller.findVCard);
+    this.router.put('/:id', this.controller.updateVCard);
   }
 }
 
