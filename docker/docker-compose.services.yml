@@ -1,0 +1,8 @@
+services:
+  mongo:
+    image: mongo:4.2
+    container_name: carddavplay-db
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongodb:/data/db

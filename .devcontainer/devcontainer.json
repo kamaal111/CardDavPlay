@@ -1,6 +1,7 @@
 {
 	"name": "CardDav Play",
 	"dockerComposeFile": [
+		"../docker/docker-compose.services.yml",
 		"docker-compose.code.yml"
 	],
 	"service": "code",

@@ -15,13 +15,13 @@ setup-dev-container: copy-to-container set-up-zsh-environment install-node-modul
 initialize-dev-container: copy-git-config-from-outside-container set-environment
 
 mongo-shell:
-    mongosh
+    mongosh contacts
 
 mongod-start:
     systemctl start mongod
 
 mongod-status:
-    systemctl status mongod
+    systemctl status mongod || true # When it's dead it doesn't mean that it's error
 
 mongod-stop:
     systemctl stop mongod

@@ -6,21 +6,7 @@ services:
       args:
         NODE_VERSION: 20
         MONGODB_CLI_VERSION: "6.0"
-    container_name: carddav-play
+    container_name: carddavplay-code
     volumes:
       - ../..:/workspaces:cached
     command: sleep infinity
-
-  mongo:
-    image: mongo:4.2
-    restart: always
-    ports:
-      - 27017:27017
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    volumes:
-      - mongodb_data_container:/data/db
-
-volumes:
-  mongodb_data_container:
