@@ -8,6 +8,7 @@ run-dev-server: mongod-start
     export MONGODB_URL="mongodb://127.0.0.1:27017/contacts"
     export SERVER_PORT="3001"
 
+    mkdir -p data/contacts
     npx nodemon src/main.ts
 
 setup-dev-container: copy-to-container set-up-zsh-environment install-node-modules
