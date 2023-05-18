@@ -3,12 +3,19 @@ import * as logger from 'morgan';
 
 import type {AppRouter} from './types';
 import ErrorsController from './controllers/errors';
+import Database from './database';
+import config from './config';
 
 class App {
-  private app = express();
-  private errors = new ErrorsController();
+  private database: Database;
+  private app: express.Express;
+  private errors: ErrorsController;
 
   constructor({routers}: {routers: AppRouter[]}) {
+    this.database = new Database({url: config.MONGODB_URL});
+    this.app = express();
+    this.errors = new ErrorsController();
+
     this.initializeMiddleware();
     this.initializeRoutes(routers);
   }

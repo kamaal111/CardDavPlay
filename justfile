@@ -3,17 +3,16 @@ set export
 default:
   @just --list
 
-run-dev-server:
+run-dev-server: mongod-start
     #!/bin/zsh
-    export MONGODB_ADMIN_USERNAME="admin"
-    export MONGODB_ADMIN_PASSWORD="password"
-    export MONGODB_URL="mongodb://$MONGODB_ADMIN_USERNAME:$MONGODB_ADMIN_PASSWORD@mongo:27017/"
+    export MONGODB_URL="mongodb://127.0.0.1:27017/contacts"
+    export SERVER_PORT="3001"
 
     npx nodemon src/main.ts
 
-setup-dev-container: set-up-zsh-environment install-node-modules
+setup-dev-container: copy-to-container set-up-zsh-environment install-node-modules
 
-initialize-dev-container: set-environment
+initialize-dev-container: copy-git-config-from-outside-container set-environment
 
 mongod-start:
     systemctl start mongod
@@ -27,6 +26,16 @@ mongod-stop:
 [private]
 set-environment:
     zsh scripts/set_environment.zsh
+
+[private]
+copy-git-config-from-outside-container:
+    #!/bin/zsh
+    cp -f ~/.gitconfig .devcontainer/.gitconfig
+
+[private]
+copy-to-container:
+    #!/bin/zsh
+    cp -f .devcontainer/.gitconfig ~/.gitconfig
 
 [private]
 set-up-zsh-environment:
