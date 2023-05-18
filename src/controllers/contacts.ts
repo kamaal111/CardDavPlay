@@ -1,6 +1,7 @@
 import type {Response} from 'express';
 
-import VCard from '../models/VCard';
+import VCardModel from '../models/VCard';
+import VCardDatabaseModel from '../models/database/VCard';
 import isOptionalValueType from '../utils/isOptionalValueType';
 
 import type {AppRequest, Result} from '../types';
@@ -24,7 +25,7 @@ type CreateVCardPayload = {
 class ContactsController {
   constructor() {}
 
-  createVCard = (
+  createVCard = async (
     request: AppRequest<undefined, undefined, CreateVCardPayload>,
     response: Response
   ) => {
@@ -44,14 +45,22 @@ class ContactsController {
       return;
     }
 
-    const vCard = new VCard(processResult.value);
+    const vCard = new VCardModel(processResult.value);
+    const vCardDatabaseModel = new VCardDatabaseModel({
+      uid: vCard.uid,
+      content: vCard.content,
+    });
+    await vCardDatabaseModel.save();
 
-    response.status(201).json(vCard.content);
+    response.status(201).json(vCardDatabaseModel.content);
   };
 
   private processVCardPayload = (
     body: CreateVCardPayload
-  ): Result<ConstructorParameters<typeof VCard>[0], VCardValidationError> => {
+  ): Result<
+    ConstructorParameters<typeof VCardModel>[0],
+    VCardValidationError
+  > => {
     const {birthday, first_name, last_name, product_id, ...restOfBody} = body;
 
     let formattedBirth: Date | undefined = undefined;

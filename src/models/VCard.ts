@@ -8,7 +8,7 @@ interface VCardable {
   nickname?: string;
   birthday?: Date;
   productID?: string;
-  id?: string;
+  uid?: string;
   addresses?: {
     types: string[];
     street?: string;
@@ -25,7 +25,7 @@ class VCard implements VCardable {
   nickname?: string;
   birthday?: Date;
   productID?: string;
-  id?: string;
+  uid: string;
   addresses?: {
     types: string[];
     street?: string;
@@ -34,7 +34,7 @@ class VCard implements VCardable {
     country?: string;
   }[];
 
-  private _rawContent?: string;
+  private _rawContent: string;
 
   constructor(params: VCardable) {
     this.firstName = params.firstName.trim();
@@ -43,47 +43,16 @@ class VCard implements VCardable {
     this.nickname = params.nickname?.trim();
     this.birthday = params.birthday;
     this.addresses = params.addresses;
+    this.uid = this.makeID(params.uid?.trim());
+    this._rawContent = this.makeContent();
   }
 
   get content(): string {
-    if (this._rawContent != null) {
-      return this._rawContent;
-    }
-
-    const content = this.makeContent();
-    this._rawContent = content;
-    return content;
-  }
-
-  private makeContent(): string {
-    const vCardValues = [
-      `PRODID:${this.productID ?? '-//Kamaal.io'}`.substring(
-        0,
-        VCard.MAXIMUM_CHARACTERS
-      ),
-      this.idField,
-      this.infoField,
-      this.fullNameField,
-      ...this.telFields,
-      ...this.addressFields,
-    ];
-
-    if (this.nickname) {
-      vCardValues.push(
-        `NICKNAME:${this.nickname}`.substring(0, VCard.MAXIMUM_CHARACTERS)
-      );
-    }
-
-    const birthdayField = this.birthdayField;
-    if (birthdayField) {
-      vCardValues.push(birthdayField);
-    }
-
-    return this.wrapVCardValues(vCardValues).join('\n');
+    return this._rawContent;
   }
 
   private get idField() {
-    return `UID:${this.id ?? uuid()}`;
+    return `UID:${this.uid}`;
   }
 
   private get addressFields(): string[] {
@@ -166,6 +135,37 @@ class VCard implements VCardable {
       0,
       VCard.MAXIMUM_CHARACTERS
     );
+  }
+
+  private makeContent(): string {
+    const vCardValues = [
+      `PRODID:${this.productID ?? '-//Kamaal.io'}`.substring(
+        0,
+        VCard.MAXIMUM_CHARACTERS
+      ),
+      this.idField,
+      this.infoField,
+      this.fullNameField,
+      ...this.telFields,
+      ...this.addressFields,
+    ];
+
+    if (this.nickname) {
+      vCardValues.push(
+        `NICKNAME:${this.nickname}`.substring(0, VCard.MAXIMUM_CHARACTERS)
+      );
+    }
+
+    const birthdayField = this.birthdayField;
+    if (birthdayField) {
+      vCardValues.push(birthdayField);
+    }
+
+    return this.wrapVCardValues(vCardValues).join('\n');
+  }
+
+  private makeID(id?: string): string {
+    return id ?? uuid();
   }
 
   private wrapVCardValues(values: string[]): string[] {

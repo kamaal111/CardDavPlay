@@ -14,6 +14,9 @@ setup-dev-container: copy-to-container set-up-zsh-environment install-node-modul
 
 initialize-dev-container: copy-git-config-from-outside-container set-environment
 
+mongo-shell:
+    mongosh
+
 mongod-start:
     systemctl start mongod
 
