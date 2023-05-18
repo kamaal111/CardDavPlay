@@ -1,6 +1,5 @@
 import compactMap from '../utils/array/compactMap';
-
-import type {Result} from '../types';
+import uuid from '../utils/uuid';
 
 interface VCardable {
   firstName: string;
@@ -9,6 +8,7 @@ interface VCardable {
   nickname?: string;
   birthday?: Date;
   productID?: string;
+  id?: string;
   addresses?: {
     types: string[];
     street?: string;
@@ -25,6 +25,7 @@ class VCard implements VCardable {
   nickname?: string;
   birthday?: Date;
   productID?: string;
+  id?: string;
   addresses?: {
     types: string[];
     street?: string;
@@ -32,6 +33,8 @@ class VCard implements VCardable {
     city?: string;
     country?: string;
   }[];
+
+  private _rawContent?: string;
 
   constructor(params: VCardable) {
     this.firstName = params.firstName.trim();
@@ -42,12 +45,23 @@ class VCard implements VCardable {
     this.addresses = params.addresses;
   }
 
-  makeContent(): Result<string, VCardMakeError> {
+  get content(): string {
+    if (this._rawContent != null) {
+      return this._rawContent;
+    }
+
+    const content = this.makeContent();
+    this._rawContent = content;
+    return content;
+  }
+
+  private makeContent(): string {
     const vCardValues = [
       `PRODID:${this.productID ?? '-//Kamaal.io'}`.substring(
         0,
         VCard.MAXIMUM_CHARACTERS
       ),
+      this.idField,
       this.infoField,
       this.fullNameField,
       ...this.telFields,
@@ -65,10 +79,11 @@ class VCard implements VCardable {
       vCardValues.push(birthdayField);
     }
 
-    return {
-      ok: true,
-      value: this.wrapVCardValues(vCardValues).join('\n'),
-    };
+    return this.wrapVCardValues(vCardValues).join('\n');
+  }
+
+  private get idField() {
+    return `UID:${this.id ?? uuid()}`;
   }
 
   private get addressFields(): string[] {
@@ -163,12 +178,6 @@ class VCard implements VCardable {
   // Fields should fit in to 8bits
   private static MAXIMUM_CHARACTERS = 2 ** 8;
   private static VERSION = '3.0';
-}
-
-class VCardMakeError extends Error {
-  constructor(reason: string) {
-    super(`failed to make VCard; ${reason}`);
-  }
 }
 
 export default VCard;

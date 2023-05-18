@@ -45,15 +45,8 @@ class ContactsController {
     }
 
     const vCard = new VCard(processResult.value);
-    const vCardMakeResult = vCard.makeContent();
-    if (!vCardMakeResult.ok) {
-      response.status(400).json({
-        details: vCardMakeResult.error.message,
-      });
-      return;
-    }
 
-    response.status(201).json(vCardMakeResult.value);
+    response.status(201).json(vCard.content);
   };
 
   private processVCardPayload = (
